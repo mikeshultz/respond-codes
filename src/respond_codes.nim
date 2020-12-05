@@ -1,6 +1,16 @@
 import re, times, strutils, strformat, typetraits
 import asynchttpserver, asyncdispatch, asyncnet
 
+const INDEX_BODY = """################################################################################
+################################ respond.codes #################################
+################################################################################
+
+This service responds with requested HTTP status codes.  If you want an HTTP
+418, send a request to /418.  For example:
+
+    curl -I http://respond.codes/418
+"""
+
 proc nowHeader: string =
   # Date: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
   return now().utc.format("ddd, dd MM yyyy hh:mm:ss") & " UTC"
@@ -14,7 +24,7 @@ proc send404(req: Request, headers: HttpHeaders) {.async.} =
 
 proc main(server: AsyncHttpServer) {.async.} =
 
-  proc handler(req: Request) {.async.} =
+  proc handler(req: Request) {.async, gcsafe.} =
     var now = nowHeader()
     let headers = {
       "Date": now,
@@ -23,11 +33,17 @@ proc main(server: AsyncHttpServer) {.async.} =
     var statusCode = "404"
 
     if req.url.path.high <= 1:
-      await send404(req, headers.newHttpHeaders())
+      await req.respond(Http200, INDEX_BODY, headers.newHttpHeaders())
 
     else:
-      statusCode = req.url.path[1..req.url.path.high]
+      var final = req.url.path.high
 
+      # Chop off the end slash
+      if req.url.path[final..final] == "/":
+        final = req.url.path.high - 1
+
+      statusCode = req.url.path[1..final]
+      echo "statusCode:" & statusCode
       if match(statusCode, re"^[0-9]+$", start=0):
         var intCode = parseint(statusCode)
         await req.respond(HttpCode(intCode), "", headers.newHttpHeaders())
