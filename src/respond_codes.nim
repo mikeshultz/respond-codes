@@ -43,7 +43,7 @@ proc main(server: AsyncHttpServer) {.async.} =
         final = req.url.path.high - 1
 
       statusCode = req.url.path[1..final]
-      echo "statusCode:" & statusCode
+
       if match(statusCode, re"^[0-9]+$", start=0):
         var intCode = parseint(statusCode)
         await req.respond(HttpCode(intCode), "", headers.newHttpHeaders())
