@@ -33,6 +33,8 @@ proc main(server: AsyncHttpServer) {.async.} =
     var statusCode = "404"
 
     if req.url.path.high <= 1:
+      logRequest(req, "200", "GET", "0", now)
+
       await req.respond(Http200, INDEX_BODY, headers.newHttpHeaders())
 
     else:
@@ -44,13 +46,13 @@ proc main(server: AsyncHttpServer) {.async.} =
 
       statusCode = req.url.path[1..final]
 
+      logRequest(req, statusCode, "GET", "0", now)
+
       if match(statusCode, re"^[0-9]+$", start=0):
         var intCode = parseint(statusCode)
         await req.respond(HttpCode(intCode), "", headers.newHttpHeaders())
       else:
         await send404(req, headers.newHttpHeaders())
-
-    logRequest(req, statusCode, "GET", "0", now)
 
     # Close the connection
     req.client.close()
