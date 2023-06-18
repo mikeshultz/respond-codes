@@ -1,0 +1,14 @@
+FROM nimlang/nim:alpine
+
+RUN apk add --virtual .build-deps gcc musl-dev libpcrecpp
+
+RUN mkdir /app
+
+WORKDIR /app
+
+COPY src/respond_codes.nim /app/respond_codes.nim
+
+RUN nim c respond_codes.nim
+RUN ls -lah
+
+ENTRYPOINT ["./respond_codes"]
