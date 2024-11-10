@@ -5,7 +5,7 @@
 replicaCount: 3
 
 image:
-  repository: registry.mikes.network/respond
+  repository: image.mikes.network/mikeshultz/respond
   pullPolicy: IfNotPresent
   tag: latest
 
